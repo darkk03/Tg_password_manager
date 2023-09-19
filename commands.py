@@ -1,6 +1,7 @@
 
 from telebot import types
 from authorization import check_password
+from database import add_password
 
 def setup_commands(bot):
     @bot.message_handler(commands=['help'])
@@ -25,6 +26,41 @@ def setup_commands(bot):
         item5 = types.KeyboardButton("Exit")
 
         markup.add(item1, item2, item3, item4, item5)
-        bot.send_message(message.chat.id, "Welcome to tgpassman!", reply_markup=markup)
+        bot.send_message(message.chat.id, "Welcome to Telegram password-manager!", reply_markup=markup)
 
+    # Обработчик для команды "Add password"
+
+    @bot.message_handler(func=lambda message: message.text == "Add password")
+    def add_password(message):
+        markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+        item1 = types.KeyboardButton("Option 1") 
+        item2 = types.KeyboardButton("Back")  # Кнопка "Назад"
+
+        markup.add(item1, item2)
+        bot.send_message(message.chat.id, "Choose an option:", reply_markup=markup)
+
+    @bot.message_handler(func=lambda message: message.text == "Option 1")
+    def option1(message):
+        bot.send_message(message.chat.id, "Введите имя для пароля:")
+        bot.register_next_step_handler(message, process_password_name)
+
+    def process_password_name(message):
+        password_name = message.text
+        bot.send_message(message.chat.id, "Введите пароль:")
+        bot.register_next_step_handler(message, process_password, password_name)
+
+    def process_password(message, password_name):
+        password = message.text
+        
+        # Вызываем функцию для добавления пароля в базу данных
+        add_password(password_name, password)
+        
+        confirmation_message = f"Имя пароля: {password_name}\nПароль: {password}"
+        bot.send_message(message.chat.id, confirmation_message)
+
+
+    # Обработчик для команды "Back"
+    @bot.message_handler(func=lambda message: message.text == "Back")
+    def back(message):
+        send_welcome(message)  # Возврат к основному меню
 
