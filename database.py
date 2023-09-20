@@ -1,7 +1,6 @@
 import sqlite3
 
-
-def add_password(password_name, password_value):
+def add_password_to_db(password_name, password_value):
     conn = sqlite3.connect('pass.db')
     cursor = conn.cursor()
     

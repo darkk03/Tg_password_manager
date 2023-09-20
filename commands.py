@@ -1,4 +1,3 @@
-
 from telebot import types
 from authorization import check_password
 from database import add_password
@@ -47,20 +46,16 @@ def setup_commands(bot):
     def process_password_name(message):
         password_name = message.text
         bot.send_message(message.chat.id, "Введите пароль:")
-        bot.register_next_step_handler(message, process_password, password_name)
+        bot.register_next_step_handler(message, process_password, password_name)  # Передаем оба аргумента
+
 
     def process_password(message, password_name):
         password = message.text
-        
-        # Вызываем функцию для добавления пароля в базу данных
-        add_password(password_name, password)
-        
+
+        add_password(password_name, password)  # Передаем оба аргумента
+
         confirmation_message = f"Имя пароля: {password_name}\nПароль: {password}"
         bot.send_message(message.chat.id, confirmation_message)
 
 
-    # Обработчик для команды "Back"
-    @bot.message_handler(func=lambda message: message.text == "Back")
-    def back(message):
-        send_welcome(message)  # Возврат к основному меню
 
