@@ -1,6 +1,7 @@
 from telebot import types
 from authorization import check_password
 from database import add_password
+from database import add_password as db_add_password
 
 def setup_commands(bot):
     @bot.message_handler(commands=['help'])
@@ -21,10 +22,11 @@ def setup_commands(bot):
         item1 = types.KeyboardButton("Add password") 
         item2 = types.KeyboardButton("Delete password")
         item3 = types.KeyboardButton("Show passwords")
-        item4 = types.KeyboardButton("Password generator")
-        item5 = types.KeyboardButton("Exit")
+        item4 = types.KeyboardButton("Strength password generator with AI")
+        item5 = types.KeyboardButton("Verify password strength using AI")
+        item6 = types.KeyboardButton("Exit")
 
-        markup.add(item1, item2, item3, item4, item5)
+        markup.add(item1, item2, item3, item4,item5, item6)
         bot.send_message(message.chat.id, "Welcome to Telegram password-manager!", reply_markup=markup)
 
     # Обработчик для команды "Add password"
@@ -38,6 +40,8 @@ def setup_commands(bot):
         markup.add(item1, item2)
         bot.send_message(message.chat.id, "Choose an option:", reply_markup=markup)
 
+
+    
     @bot.message_handler(func=lambda message: message.text == "Option 1")
     def option1(message):
         bot.send_message(message.chat.id, "Введите имя для пароля:")
@@ -46,16 +50,16 @@ def setup_commands(bot):
     def process_password_name(message):
         password_name = message.text
         bot.send_message(message.chat.id, "Введите пароль:")
-        bot.register_next_step_handler(message, process_password, password_name)  # Передаем оба аргумента
+        bot.register_next_step_handler(message, process_password, password_name=password_name)
 
 
     def process_password(message, password_name):
         password = message.text
-
-        add_password(password_name, password)  # Передаем оба аргумента
-
+        db_add_password(password_name, password)  # Теперь передаем оба аргумента
         confirmation_message = f"Имя пароля: {password_name}\nПароль: {password}"
         bot.send_message(message.chat.id, confirmation_message)
+
+
 
 
 
