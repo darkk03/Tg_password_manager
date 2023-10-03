@@ -34,6 +34,14 @@ def add_password(name, password):
     conn.commit()
     conn.close()
 
+def delete_password(name):
+    conn = sqlite3.connect('mydatabase.db')
+    cursor = conn.cursor()
+    cursor.execute('DELETE FROM passwords WHERE name = ?', (name,))
+    conn.commit()
+    conn.close()
+
+
 # Функция для получения списка всех паролей из базы данных
 def get_passwords():
     cursor.execute('SELECT name, password FROM passwords')
