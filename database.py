@@ -44,8 +44,13 @@ def delete_password(name):
 
 # Функция для получения списка всех паролей из базы данных
 def get_passwords():
+    conn = sqlite3.connect('mydatabase.db')
+    cursor = conn.cursor()
     cursor.execute('SELECT name, password FROM passwords')
-    return cursor.fetchall()
+    passwords = cursor.fetchall()
+    conn.close()
+    return passwords
+
 
 # Закрываем соединение с базой данных при выходе из программы
 def close_database():

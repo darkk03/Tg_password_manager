@@ -35,7 +35,6 @@ def setup_commands(bot):
         markup.add(item1, item2, item3, item4,item5, item6)
         bot.send_message(message.chat.id, "Welcome to Telegram password-manager!", reply_markup=markup)
 
-
     # Обработчик команды "Add password"
     @bot.message_handler(func=lambda message: message.text == "Add password")
     def add_password(message):
@@ -47,7 +46,7 @@ def setup_commands(bot):
         bot.send_message(message.chat.id, "Choose an option:", reply_markup=markup)
 
     # Обработчик команды "Option 1"
-    @bot.message_handler(func=lambda message: message.text == "Option 1")
+    @bot.message_handler(func=lambda message: message.text == "Add")
     def option1(message):
         bot.send_message(message.chat.id, "Введите имя для пароля:")
         bot.register_next_step_handler(message, process_password_name)
@@ -66,6 +65,17 @@ def setup_commands(bot):
         confirmation_message = f"Имя пароля: {password_name}\nПароль: {password}"
         bot.send_message(message.chat.id, confirmation_message)
 
+    # Обработчик команды "Back"
+    @bot.message_handler(func=lambda message: message.text == "Back")
+    def back_to_menu(message):
+        send_welcome(message)  # Возврат в меню
+
+
+
+
+
+
+
     # Обработчик команды "Delete password"
     @bot.message_handler(func=lambda message: message.text == "Delete password")
     def Delete_password(message):
@@ -78,11 +88,11 @@ def setup_commands(bot):
 
     @bot.message_handler(func=lambda message: message.text == "Delete")
     def option1(message):
-        bot.send_message(message.chat.id, "Введите имя для пароля что бы его удалить:")
-        bot.register_next_step_handler(message, process_password_name)
+        bot.send_message(message.chat.id, "Введите имя для пароля что бы удалить:")
+        bot.register_next_step_handler(message, process_password_name_for_deletion)
 
-        # Обработка имени пароля для удаления
-    def process_password_name(message):
+    # Обработка имени пароля для удаления
+    def process_password_name_for_deletion(message):
         password_name = message.text
         try:
             delete_password(password_name)
@@ -90,18 +100,39 @@ def setup_commands(bot):
         except Exception as e:
             bot.send_message(message.chat.id, f"Произошла ошибка при удалении пароля: {e}")
 
+
+
+            
+
     # Обработчик команды "View passwords"
     @bot.message_handler(func=lambda message: message.text == "View passwords")
     def view_passwords(message):
         try:
             passwords = get_passwords()
             if passwords:
-                for name, password in passwords:
-                    bot.send_message(message.chat.id, f"Имя пароля: {name}\nПароль: {password}")
+                markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+                for name, _ in passwords:
+                    markup.add(types.KeyboardButton(name))
+                
+                bot.send_message(message.chat.id, "Выберите пароль:", reply_markup=markup)
+                bot.register_next_step_handler(message, show_selected_password)  # Регистрируем обработчик
             else:
                 bot.send_message(message.chat.id, "Пароли не найдены.")
         except sqlite3.ProgrammingError as e:
             bot.send_message(message.chat.id, f"Произошла ошибка при получении паролей: {e}")
+
+    # Обработчик для выбора пароля
+    def show_selected_password(message):
+        selected_password_name = message.text
+        passwords = get_passwords()
+        for name, password in passwords:
+            if name == selected_password_name:
+                bot.send_message(message.chat.id, f"Пароль: {password}")
+                return
+        
+        bot.send_message(message.chat.id, "Пароль не найден.")
+
+
 
 
 
