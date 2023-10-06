@@ -4,6 +4,8 @@ from authorization import check_password
 from database import add_password as db_add_password
 from database import get_passwords
 from database import delete_password
+import random
+import string
 
 # Настройка команд для бота
 def setup_commands(bot):
@@ -28,19 +30,20 @@ def setup_commands(bot):
         item1 = types.KeyboardButton("Add password") 
         item2 = types.KeyboardButton("Delete password")
         item3 = types.KeyboardButton("View passwords")
-        item4 = types.KeyboardButton("Strength password generator with AI")
-        item5 = types.KeyboardButton("Verify password strength using AI")
+        item4 = types.KeyboardButton("Password generator")
+        item5 = types.KeyboardButton("Verify passwords")
         item6 = types.KeyboardButton("Exit")
 
-        markup.add(item1, item2, item3, item4,item5, item6)
+        markup.add(item1, item2, item3, item4, item5, item6)
         bot.send_message(message.chat.id, "Welcome to Telegram password-manager!", reply_markup=markup)
 
 
 
 
 
-
+    #------------------------------------------------------------------------------------------------------------
     # Обработчик команды "Add password"
+
     @bot.message_handler(func=lambda message: message.text == "Add password")
     def add_password(message):
         markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
@@ -75,15 +78,9 @@ def setup_commands(bot):
     def back_to_menu(message):
         send_welcome(message)  # Возврат в меню
 
-
-
-
-
-
-
-
-
+    #------------------------------------------------------------------------------------------------------------
     # Обработчик команды "Delete password"
+
     @bot.message_handler(func=lambda message: message.text == "Delete password")
     def delete_password_handler(message):
         try:
@@ -95,6 +92,7 @@ def setup_commands(bot):
                     markup.add(types.KeyboardButton(name))
                 
                 markup.add(item1)
+
                 bot.send_message(message.chat.id, "Выберите пароль для удаления:", reply_markup=markup)
                 bot.register_next_step_handler(message, process_password_name_for_deletion)  # Регистрируем обработчик
             else:
@@ -112,22 +110,16 @@ def setup_commands(bot):
             bot.send_message(message.chat.id, f"Пароль '{password_name}' успешно удален.")
         except Exception as e:
             bot.send_message(message.chat.id, f"Произошла ошибка при удалении пароля: {str(e)}")
-
-
-
-  
-
-
-
-            
-
+   
+    #------------------------------------------------------------------------------------------------------------
     # Обработчик команды "View passwords"
+
     @bot.message_handler(func=lambda message: message.text == "View passwords")
     def view_passwords(message):
         try:
             passwords = get_passwords()
             if passwords:
-                markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+                markup = types.ReplyKeyboardMarkup(resize_keyboard=True, row_width=2)
                 item1 = types.KeyboardButton("Back")  # Кнопка "Назад"
                 for name, _ in passwords:
                     markup.add(types.KeyboardButton(name))
@@ -156,11 +148,73 @@ def setup_commands(bot):
         bot.send_message(message.chat.id, "Пароль не найден.")
 
 
+    #------------------------------------------------------------------------------------------------------------
+    # password generator
+
+    @bot.message_handler(func=lambda message: message.text == "Password generator")
+    def generate(message):
+        markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+        item1 = types.KeyboardButton("defolt") 
+        item2 = types.KeyboardButton("custom")
+        item3 = types.KeyboardButton("Back")
+
+        markup.add(item1, item2, item3)
+        bot.send_message(message.chat.id, "выбери:", reply_markup=markup)
+
+        if generate == "Back":
+            # Если пользователь нажал кнопку "Back", вернем его в меню
+            return send_welcome(message)
+
+    @bot.message_handler(func=lambda message: message.text == "defolt")
+    def generate_strong_password(message):
+        password_length = 16  # Длина пароля
+        characters = string.ascii_letters + string.digits + string.punctuation
+        password = ''.join(random.choice(characters) for i in range(password_length))
+        
+        bot.send_message(message.chat.id, f"Сгенерированный надежный пароль:")
+        bot.send_message(message.chat.id, password)
+
+
+
+    @bot.message_handler(func=lambda message: message.text == "custom")
+    def generate_custom_password(message):
+        markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+        item1 = types.KeyboardButton("8")
+        item2 = types.KeyboardButton("12")
+        item3 = types.KeyboardButton("16")
+        item4 = types.KeyboardButton("20")
+        markup.add(item1, item2, item3, item4)
+
+        bot.send_message(message.chat.id, "выбери длину:", reply_markup=markup)
+        bot.register_next_step_handler(message, choose_complexity)
+
+
+
+    def choose_complexity(message):
+        markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+        item1 = types.KeyboardButton("Низкая")
+        item2 = types.KeyboardButton("Средняя")
+        item3 = types.KeyboardButton("Высокая")
+        markup.add(item1, item2, item3)
+        bot.send_message(message.chat.id, "выбери сложность:", reply_markup=markup)
+        bot.register_next_step_handler(message, generate_custom_password_final, message.text)
+
+    def generate_custom_password_final(message, password_length):
+
+        password_length = int(password_length) 
+        complexity = message.text
+        if complexity == "Низкая":
+            characters = string.ascii_letters
+        elif complexity == "Средняя":
+            characters = string.ascii_letters + string.digits
+        else:
+            characters = string.ascii_letters + string.digits + string.punctuation
+        password = ''.join(random.choice(characters) for _ in range(password_length))
+        bot.send_message(message.chat.id, f"Сгенерированный кастом пароль:")
+        bot.send_message(message.chat.id, password)
+        return send_welcome(message)
+
+
+
+
     
-    
-
-
-
-
-
-
