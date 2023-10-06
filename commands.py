@@ -45,7 +45,7 @@ def setup_commands(bot):
         markup.add(item1, item2)
         bot.send_message(message.chat.id, "Choose an option:", reply_markup=markup)
 
-    # Обработчик команды "Option 1"
+    # Обработчик команды "add"
     @bot.message_handler(func=lambda message: message.text == "Add")
     def option1(message):
         bot.send_message(message.chat.id, "Введите имя для пароля:")
@@ -76,29 +76,34 @@ def setup_commands(bot):
 
 
 
-    # Обработчик команды "Delete password"
-    @bot.message_handler(func=lambda message: message.text == "Delete password")
-    def Delete_password(message):
-        markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
-        item1 = types.KeyboardButton("Delete") 
-        item2 = types.KeyboardButton("Back")  # Кнопка "Назад"
-
-        markup.add(item1, item2)
-        bot.send_message(message.chat.id, "Choose an option:", reply_markup=markup)
-
-    @bot.message_handler(func=lambda message: message.text == "Delete")
-    def option1(message):
-        bot.send_message(message.chat.id, "Введите имя для пароля что бы удалить:")
-        bot.register_next_step_handler(message, process_password_name_for_deletion)
-
-    # Обработка имени пароля для удаления
     def process_password_name_for_deletion(message):
         password_name = message.text
         try:
             delete_password(password_name)
             bot.send_message(message.chat.id, f"Пароль '{password_name}' успешно удален.")
         except Exception as e:
-            bot.send_message(message.chat.id, f"Произошла ошибка при удалении пароля: {e}")
+            bot.send_message(message.chat.id, f"Произошла ошибка при удалении пароля: {str(e)}")
+
+    # Обработчик команды "Delete password"
+    @bot.message_handler(func=lambda message: message.text == "Delete password")
+    def delete_password_handler(message):
+        try:
+            passwords = get_passwords()
+            if passwords:
+                markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+                item1 = types.KeyboardButton("Back")  # Кнопка "Назад"
+                for name, _ in passwords:
+                    markup.add(types.KeyboardButton(name))
+                
+                markup.add(item1)
+                bot.send_message(message.chat.id, "Выберите пароль для удаления:", reply_markup=markup)
+                bot.register_next_step_handler(message, process_password_name_for_deletion)  # Регистрируем обработчик
+            else:
+                bot.send_message(message.chat.id, "Пароли не найдены.")
+        except sqlite3.ProgrammingError as e:
+            bot.send_message(message.chat.id, f"Произошла ошибка при получении паролей: {str(e)}")
+
+
 
 
 
@@ -131,6 +136,11 @@ def setup_commands(bot):
                 return
         
         bot.send_message(message.chat.id, "Пароль не найден.")
+    
+    # Обработчик команды "Back"
+    @bot.message_handler(func=lambda message: message.text == "Back")
+    def back_to_menu(message):
+        send_welcome(message)  # Возврат в меню
 
 
 
