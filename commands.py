@@ -18,12 +18,24 @@ def setup_commands(bot):
     # Обработчик команды /start
     @bot.message_handler(commands=['start'])
     def start(message):
-        password = message.text.split()[-1]  
+        chat_id = message.chat.id
+        if message.text == '/start':
+            bot.send_message(chat_id, "Введите код для доступа:")
+            bot.register_next_step_handler(message, check_start_password)
+        else:
+            bot.send_message(chat_id, "Для начала отправьте команду /start")
+
+    # Функция для проверки кода при вводе
+    def check_start_password(message):
+        chat_id = message.chat.id
+        password = message.text
+
         if check_password(password):
-            bot.send_message(message.chat.id, "Добро пожаловать! Вы авторизованы.")
+            bot.send_message(chat_id, "Добро пожаловать! Вы авторизованы.")
             send_welcome(message)
         else:
-            bot.send_message(message.chat.id, "Неверный пароль. Доступ запрещен.")
+            bot.send_message(chat_id, "Неверный код. Доступ запрещен.")
+
 
     # Отправка приветственного сообщения
     def send_welcome(message):
@@ -36,11 +48,7 @@ def setup_commands(bot):
         item6 = types.KeyboardButton("Exit")
 
         markup.add(item1, item2, item3, item4, item5, item6)
-        bot.send_message(message.chat.id, "Welcome to Telegram password-manager!", reply_markup=markup)
-
-
-
-
+        bot.send_message(message.chat.id, "Menu", reply_markup=markup)
 
     #------------------------------------------------------------------------------------------------------------
     # Обработчик команды "Add password"
@@ -224,8 +232,7 @@ def setup_commands(bot):
     # password check
 
 
-    # Функция для проверки надежности пароля
-    
+    # чел выбирает какой то пароль из списка
 
     @bot.message_handler(func=lambda message: message.text == "Verify passwords")
     def generate(message):
@@ -244,6 +251,10 @@ def setup_commands(bot):
         except sqlite3.ProgrammingError as e:
             bot.send_message(message.chat.id, f"Произошла ошибка при получении паролей: {e}")
 
+
+    
+    # получаем пароль в инпуте передаем его в переменую, отправляем его в алогритм для чека и потом возвращаем ответ 
+
     def check_selected_password(message):
         selected_password_name = message.text
         if selected_password_name == "Back":
@@ -259,7 +270,7 @@ def setup_commands(bot):
         bot.send_message(message.chat.id, "Пароль не найден.")
 
 
-
+    # логика для проверки
     def check_password_strength(password):
         # Проверяем длину пароля (минимум 8 символов)
         if len(password) < 8:
@@ -280,5 +291,14 @@ def setup_commands(bot):
         return "Надежный пароль"
 
 
+    #------------------------------------------------------------------------------------------------------------
+    # exit
 
-    
+    # Обработчик кнопки "Exit"
+    @bot.message_handler(func=lambda message: message.text == "Exit")
+    def exit(message):
+        chat_id = message.chat.id
+        markup = types.ReplyKeyboardRemove()  # Убираем клавиатуру
+        bot.send_message(chat_id, "Закрываем доступ", reply_markup=markup)
+
+
