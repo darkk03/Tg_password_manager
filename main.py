@@ -7,4 +7,4 @@ bot = telebot.TeleBot(API_TOKEN)
 
 if __name__ == '__main__':
     setup_commands(bot)
-    bot.polling(non_stop=True)
+    bot.polling(non_stop=True)  
